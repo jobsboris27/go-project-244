@@ -1,6 +1,7 @@
 package main
 
 import (
+	"code"
 	"context"
 	"log"
 	"os"
@@ -23,6 +24,19 @@ func main() {
 				Aliases: []string{"h"},
 				Usage:   "show help",
 			},
+		},
+		Action: func(ctx context.Context, cmd *cli.Command) error {
+			// Проверяем, что передано ровно два аргумента
+			if cmd.NArg() != 2 {
+				return cli.Exit("Error: Expected 2 file paths", 1)
+			}
+
+			filepath1 := cmd.Args().Get(0)
+			filepath2 := cmd.Args().Get(1)
+			code.Parse(filepath1, filepath2)
+			// format := cmd.String("format")
+
+			return nil
 		},
 	}
 

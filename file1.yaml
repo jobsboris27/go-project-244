@@ -1,0 +1,12 @@
+application:
+  name: MyApp
+  version: 1.0.0
+  features:
+    - authentication
+    - logging
+    - caching
+  database:
+    type: postgresql
+    settings:
+      pool_size: 10
+      timeout: 30
