@@ -3,6 +3,7 @@ package main
 import (
 	"code"
 	"context"
+	"fmt"
 	"log"
 	"os"
 
@@ -33,8 +34,10 @@ func main() {
 
 			filepath1 := cmd.Args().Get(0)
 			filepath2 := cmd.Args().Get(1)
-			code.Parse(filepath1, filepath2)
+			result := code.Parse(filepath1, filepath2)
 			// format := cmd.String("format")
+
+			fmt.Println(result)
 
 			return nil
 		},
