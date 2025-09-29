@@ -100,3 +100,28 @@ func TestParseWithFormat(t *testing.T) {
 	assert.Equal(t, result1, result2)
 }
 
+func TestPlainFormatter(t *testing.T) {
+	result := ParseWithFormat("testdata/fixture/nested1.json", "testdata/fixture/nested2.json", "plain")
+
+	assert.Contains(t, result, "Property 'common.follow' was added with value: false")
+	assert.Contains(t, result, "Property 'common.setting2' was removed")
+	assert.Contains(t, result, "Property 'common.setting3' was updated. From true to null")
+	assert.Contains(t, result, "Property 'common.setting4' was added with value: 'blah blah'")
+	assert.Contains(t, result, "Property 'common.setting5' was added with value: [complex value]")
+	assert.Contains(t, result, "Property 'common.setting6.doge.wow' was updated. From '' to 'so much'")
+	assert.Contains(t, result, "Property 'common.setting6.ops' was added with value: 'vops'")
+	assert.Contains(t, result, "Property 'group1.baz' was updated. From 'bas' to 'bars'")
+	assert.Contains(t, result, "Property 'group1.nest' was updated. From [complex value] to 'str'")
+	assert.Contains(t, result, "Property 'group2' was removed")
+	assert.Contains(t, result, "Property 'group3' was added with value: [complex value]")
+}
+
+func TestPlainFormatterSimple(t *testing.T) {
+	result := ParseWithFormat("testdata/fixture/file1.yaml", "testdata/fixture/file2.yaml", "plain")
+
+	assert.Contains(t, result, "Property 'follow' was removed")
+	assert.Contains(t, result, "Property 'proxy' was removed")
+	assert.Contains(t, result, "Property 'timeout' was updated. From 50 to 20")
+	assert.Contains(t, result, "Property 'verbose' was added with value: true")
+}
+

@@ -1,12 +1,12 @@
 package code
 
 import (
+	"code/internal/formatters"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
 
 	"gopkg.in/yaml.v2"
 )
@@ -52,12 +52,23 @@ func ParseWithFormat(path1, path2, format string) string {
 }
 
 func renderWithFormat(diffNodes []*DiffNode, format string) string {
-	switch format {
-	case "stylish":
-		return renderStylish(diffNodes, 0)
-	default:
-		return renderStylish(diffNodes, 0)
+	formatterNodes := convertToFormatterNodes(diffNodes)
+	return formatters.RenderWithFormat(formatterNodes, format)
+}
+
+func convertToFormatterNodes(diffNodes []*DiffNode) []*formatters.DiffNode {
+	var result []*formatters.DiffNode
+	for _, node := range diffNodes {
+		formatterNode := &formatters.DiffNode{
+			Key:      node.Key,
+			Status:   node.Status,
+			OldValue: node.OldValue,
+			NewValue: node.NewValue,
+			Children: convertToFormatterNodes(node.Children),
+		}
+		result = append(result, formatterNode)
 	}
+	return result
 }
 
 func parseByExtension(path string) (map[string]interface{}, error) {
@@ -116,7 +127,6 @@ func convertMapToTree(data map[string]interface{}) *TreeNode {
 			root.Children = append(root.Children, childNode)
 
 		case map[interface{}]interface{}:
-			// Convert map[interface{}]interface{} to map[string]interface{}
 			convertedMap := make(map[string]interface{})
 			for k, val := range v {
 				if strKey, ok := k.(string); ok {
@@ -230,120 +240,6 @@ func genDiff(tree1, tree2 *TreeNode) []*DiffNode {
 	}
 
 	return diff
-}
-
-func renderStylish(diffNodes []*DiffNode, depth int) string {
-	var result strings.Builder
-
-	if depth == 0 {
-		result.WriteString("{\n")
-	}
-
-	for _, node := range diffNodes {
-		switch node.Status {
-		case "unchanged":
-			indent := strings.Repeat(" ", depth*4+4)
-			result.WriteString(fmt.Sprintf("%s%s: %s\n", indent, node.Key, formatValue(node.OldValue, depth+1)))
-
-		case "added":
-			indent := strings.Repeat(" ", depth*4+2)
-			result.WriteString(fmt.Sprintf("%s+ %s: %s\n", indent, node.Key, formatValue(node.NewValue, depth+1)))
-
-		case "removed":
-			indent := strings.Repeat(" ", depth*4+2)
-			result.WriteString(fmt.Sprintf("%s- %s: %s\n", indent, node.Key, formatValue(node.OldValue, depth+1)))
-
-		case "modified":
-			indent := strings.Repeat(" ", depth*4+2)
-			result.WriteString(fmt.Sprintf("%s- %s: %s\n", indent, node.Key, formatValue(node.OldValue, depth+1)))
-			result.WriteString(fmt.Sprintf("%s+ %s: %s\n", indent, node.Key, formatValue(node.NewValue, depth+1)))
-
-		case "nested":
-			indent := strings.Repeat(" ", depth*4+4)
-			result.WriteString(fmt.Sprintf("%s%s: {\n", indent, node.Key))
-			result.WriteString(renderStylish(node.Children, depth+1))
-			result.WriteString(fmt.Sprintf("%s}\n", indent))
-		}
-	}
-
-	if depth == 0 {
-		result.WriteString("}")
-	}
-
-	return result.String()
-}
-
-func formatValue(value interface{}, depth int) string {
-	if value == nil {
-		return "null"
-	}
-
-	switch v := value.(type) {
-	case string:
-		if v == "" {
-			return ""
-		}
-		return v
-	case map[string]interface{}:
-		return formatObject(v, depth)
-	case map[interface{}]interface{}:
-		converted := make(map[string]interface{})
-		for k, val := range v {
-			if strKey, ok := k.(string); ok {
-				converted[strKey] = val
-			}
-		}
-		return formatObject(converted, depth)
-	case []interface{}:
-		return formatArray(v, depth)
-	default:
-		return fmt.Sprintf("%v", v)
-	}
-}
-
-func formatObject(obj map[string]interface{}, depth int) string {
-	if len(obj) == 0 {
-		return "{}"
-	}
-
-	var result strings.Builder
-	result.WriteString("{\n")
-
-	var keys []string
-	for k := range obj {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-
-	for _, key := range keys {
-		indent := strings.Repeat(" ", depth*4+4)
-		result.WriteString(fmt.Sprintf("%s%s: %s\n", indent, key, formatValue(obj[key], depth+1)))
-	}
-
-	indent := strings.Repeat(" ", depth*4)
-	result.WriteString(fmt.Sprintf("%s}", indent))
-	return result.String()
-}
-
-func formatArray(arr []interface{}, depth int) string {
-	if len(arr) == 0 {
-		return "[]"
-	}
-
-	var result strings.Builder
-	result.WriteString("[\n")
-
-	for i, item := range arr {
-		indent := strings.Repeat(" ", depth*4+4)
-		result.WriteString(fmt.Sprintf("%s%s\n", indent, formatValue(item, depth+1)))
-		if i < len(arr)-1 {
-			result.WriteString(",")
-		}
-	}
-
-	indent := strings.Repeat(" ", depth*4)
-	result.WriteString(fmt.Sprintf("%s]", indent))
-	return result.String()
 }
 
 func collectAllKeys(tree1, tree2 *TreeNode) []string {
