@@ -8,7 +8,7 @@ run: build
 
 test:
 	go mod tidy
-	go test -v
+	go test -v -coverprofile=coverage.out ./...
 
 install:
 	go install ./cmd/gendiff
