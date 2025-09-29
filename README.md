@@ -2,7 +2,7 @@
 
 A CLI tool for comparing configuration files (JSON/YAML) and showing differences.
 
-[![asciicast](https://asciinema.org/a/qernD3q5LzCgpKqpZCMt1PHOP.svg)](https://asciinema.org/a/qernD3q5LzCgpKqpZCMt1PHOP)
+[![asciicast](https://asciinema.org/a/hiFOAP2MVg8KEYo5LPH8M01oF.svg)](https://asciinema.org/a/hiFOAP2MVg8KEYo5LPH8M01oF)
 
 ## Badges
 

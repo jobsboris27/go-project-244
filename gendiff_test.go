@@ -1,6 +1,7 @@
 package code
 
 import (
+	"encoding/json"
 	"os"
 	"strings"
 	"testing"
@@ -123,5 +124,39 @@ func TestPlainFormatterSimple(t *testing.T) {
 	assert.Contains(t, result, "Property 'proxy' was removed")
 	assert.Contains(t, result, "Property 'timeout' was updated. From 50 to 20")
 	assert.Contains(t, result, "Property 'verbose' was added with value: true")
+}
+
+func TestJSONFormatter(t *testing.T) {
+	result := ParseWithFormat("testdata/fixture/file1.yaml", "testdata/fixture/file2.yaml", "json")
+
+	assert.Contains(t, result, `"key": "follow"`)
+	assert.Contains(t, result, `"type": "removed"`)
+	assert.Contains(t, result, `"key": "timeout"`)
+	assert.Contains(t, result, `"type": "updated"`)
+	assert.Contains(t, result, `"oldValue": 50`)
+	assert.Contains(t, result, `"newValue": 20`)
+	assert.Contains(t, result, `"key": "verbose"`)
+	assert.Contains(t, result, `"type": "added"`)
+
+	var jsonData []map[string]interface{}
+	err := json.Unmarshal([]byte(result), &jsonData)
+	assert.NoError(t, err)
+	assert.Greater(t, len(jsonData), 0)
+}
+
+func TestJSONFormatterNested(t *testing.T) {
+	result := ParseWithFormat("testdata/fixture/nested1.json", "testdata/fixture/nested2.json", "json")
+
+	assert.Contains(t, result, `"key": "common"`)
+	assert.Contains(t, result, `"type": "nested"`)
+	assert.Contains(t, result, `"children"`)
+	assert.Contains(t, result, `"key": "setting3"`)
+	assert.Contains(t, result, `"oldValue": true`)
+	assert.Contains(t, result, `"newValue": null`)
+
+	var jsonData []map[string]interface{}
+	err := json.Unmarshal([]byte(result), &jsonData)
+	assert.NoError(t, err)
+	assert.Greater(t, len(jsonData), 0)
 }
 
