@@ -2,6 +2,8 @@
 
 A CLI tool for comparing configuration files (JSON/YAML) and showing differences.
 
+[![asciicast](https://asciinema.org/a/qernD3q5LzCgpKqpZCMt1PHOP.svg)](https://asciinema.org/a/qernD3q5LzCgpKqpZCMt1PHOP)
+
 ## Badges
 
 [![Actions Status](https://github.com/jobsboris27/go-project-244/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/jobsboris27/go-project-244/actions)
