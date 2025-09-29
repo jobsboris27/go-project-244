@@ -31,6 +31,10 @@ const (
 )
 
 func Parse(path1, path2 string) string {
+	return ParseWithFormat(path1, path2, "stylish")
+}
+
+func ParseWithFormat(path1, path2, format string) string {
 	data1, err := parseByExtension(path1)
 	if err != nil {
 		fmt.Println("Error parsing file 1:", err)
@@ -44,7 +48,16 @@ func Parse(path1, path2 string) string {
 	}
 
 	diff := genDiff(convertMapToTree(data1), convertMapToTree(data2))
-	return renderDiff(diff)
+	return renderWithFormat(diff, format)
+}
+
+func renderWithFormat(diffNodes []*DiffNode, format string) string {
+	switch format {
+	case "stylish":
+		return renderStylish(diffNodes, 0)
+	default:
+		return renderStylish(diffNodes, 0)
+	}
 }
 
 func parseByExtension(path string) (map[string]interface{}, error) {
@@ -177,11 +190,19 @@ func genDiff(tree1, tree2 *TreeNode) []*DiffNode {
 		switch {
 		case node1 == nil && node2 != nil:
 			diffNode.Status = "added"
-			diffNode.NewValue = node2.Value
+			if hasChildren(node2) {
+				diffNode.NewValue = reconstructObject(node2)
+			} else {
+				diffNode.NewValue = node2.Value
+			}
 
 		case node1 != nil && node2 == nil:
 			diffNode.Status = "removed"
-			diffNode.OldValue = node1.Value
+			if hasChildren(node1) {
+				diffNode.OldValue = reconstructObject(node1)
+			} else {
+				diffNode.OldValue = node1.Value
+			}
 
 		case node1 != nil && node2 != nil:
 			if hasChildren(node1) && hasChildren(node2) {
@@ -192,8 +213,16 @@ func genDiff(tree1, tree2 *TreeNode) []*DiffNode {
 				diffNode.OldValue = node1.Value
 			} else {
 				diffNode.Status = "modified"
-				diffNode.OldValue = node1.Value
-				diffNode.NewValue = node2.Value
+				if hasChildren(node1) {
+					diffNode.OldValue = reconstructObject(node1)
+				} else {
+					diffNode.OldValue = node1.Value
+				}
+				if hasChildren(node2) {
+					diffNode.NewValue = reconstructObject(node2)
+				} else {
+					diffNode.NewValue = node2.Value
+				}
 			}
 		}
 
@@ -203,33 +232,117 @@ func genDiff(tree1, tree2 *TreeNode) []*DiffNode {
 	return diff
 }
 
-func renderDiff(diffNodes []*DiffNode) string {
+func renderStylish(diffNodes []*DiffNode, depth int) string {
 	var result strings.Builder
-	result.WriteString("{\n")
+
+	if depth == 0 {
+		result.WriteString("{\n")
+	}
 
 	for _, node := range diffNodes {
 		switch node.Status {
 		case "unchanged":
-			result.WriteString(fmt.Sprintf("  %s: %v\n", node.Key, node.OldValue))
+			indent := strings.Repeat(" ", depth*4+4)
+			result.WriteString(fmt.Sprintf("%s%s: %s\n", indent, node.Key, formatValue(node.OldValue, depth+1)))
+
 		case "added":
-			result.WriteString(fmt.Sprintf("+ %s: %v\n", node.Key, node.NewValue))
+			indent := strings.Repeat(" ", depth*4+2)
+			result.WriteString(fmt.Sprintf("%s+ %s: %s\n", indent, node.Key, formatValue(node.NewValue, depth+1)))
+
 		case "removed":
-			result.WriteString(fmt.Sprintf("- %s: %v\n", node.Key, node.OldValue))
+			indent := strings.Repeat(" ", depth*4+2)
+			result.WriteString(fmt.Sprintf("%s- %s: %s\n", indent, node.Key, formatValue(node.OldValue, depth+1)))
+
 		case "modified":
-			result.WriteString(fmt.Sprintf("- %s: %v\n", node.Key, node.OldValue))
-			result.WriteString(fmt.Sprintf("* %s: %v\n", node.Key, node.NewValue))
+			indent := strings.Repeat(" ", depth*4+2)
+			result.WriteString(fmt.Sprintf("%s- %s: %s\n", indent, node.Key, formatValue(node.OldValue, depth+1)))
+			result.WriteString(fmt.Sprintf("%s+ %s: %s\n", indent, node.Key, formatValue(node.NewValue, depth+1)))
+
 		case "nested":
-			result.WriteString(fmt.Sprintf("    %s: {\n", node.Key))
-			nestedResult := renderDiff(node.Children)
-			lines := strings.Split(nestedResult, "\n")
-			for i := 1; i < len(lines)-1; i++ {
-				result.WriteString("      " + lines[i] + "\n")
-			}
-			result.WriteString("    }\n")
+			indent := strings.Repeat(" ", depth*4+4)
+			result.WriteString(fmt.Sprintf("%s%s: {\n", indent, node.Key))
+			result.WriteString(renderStylish(node.Children, depth+1))
+			result.WriteString(fmt.Sprintf("%s}\n", indent))
 		}
 	}
 
-	result.WriteString("}")
+	if depth == 0 {
+		result.WriteString("}")
+	}
+
+	return result.String()
+}
+
+func formatValue(value interface{}, depth int) string {
+	if value == nil {
+		return "null"
+	}
+
+	switch v := value.(type) {
+	case string:
+		if v == "" {
+			return ""
+		}
+		return v
+	case map[string]interface{}:
+		return formatObject(v, depth)
+	case map[interface{}]interface{}:
+		converted := make(map[string]interface{})
+		for k, val := range v {
+			if strKey, ok := k.(string); ok {
+				converted[strKey] = val
+			}
+		}
+		return formatObject(converted, depth)
+	case []interface{}:
+		return formatArray(v, depth)
+	default:
+		return fmt.Sprintf("%v", v)
+	}
+}
+
+func formatObject(obj map[string]interface{}, depth int) string {
+	if len(obj) == 0 {
+		return "{}"
+	}
+
+	var result strings.Builder
+	result.WriteString("{\n")
+
+	var keys []string
+	for k := range obj {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	for _, key := range keys {
+		indent := strings.Repeat(" ", depth*4+4)
+		result.WriteString(fmt.Sprintf("%s%s: %s\n", indent, key, formatValue(obj[key], depth+1)))
+	}
+
+	indent := strings.Repeat(" ", depth*4)
+	result.WriteString(fmt.Sprintf("%s}", indent))
+	return result.String()
+}
+
+func formatArray(arr []interface{}, depth int) string {
+	if len(arr) == 0 {
+		return "[]"
+	}
+
+	var result strings.Builder
+	result.WriteString("[\n")
+
+	for i, item := range arr {
+		indent := strings.Repeat(" ", depth*4+4)
+		result.WriteString(fmt.Sprintf("%s%s\n", indent, formatValue(item, depth+1)))
+		if i < len(arr)-1 {
+			result.WriteString(",")
+		}
+	}
+
+	indent := strings.Repeat(" ", depth*4)
+	result.WriteString(fmt.Sprintf("%s]", indent))
 	return result.String()
 }
 
@@ -275,4 +388,16 @@ func areValuesEqual(node1, node2 *TreeNode) bool {
 
 func hasChildren(node *TreeNode) bool {
 	return node != nil && len(node.Children) > 0
+}
+
+func reconstructObject(node *TreeNode) interface{} {
+	if !hasChildren(node) {
+		return node.Value
+	}
+
+	result := make(map[string]interface{})
+	for _, child := range node.Children {
+		result[child.Key] = reconstructObject(child)
+	}
+	return result
 }

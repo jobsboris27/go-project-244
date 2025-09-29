@@ -27,16 +27,18 @@ func main() {
 			},
 		},
 		Action: func(ctx context.Context, cmd *cli.Command) error {
-			// Проверяем, что передано ровно два аргумента
 			if cmd.NArg() != 2 {
 				return cli.Exit("Error: Expected 2 file paths", 1)
 			}
 
 			filepath1 := cmd.Args().Get(0)
 			filepath2 := cmd.Args().Get(1)
-			result := code.Parse(filepath1, filepath2)
-			// format := cmd.String("format")
+			format := cmd.String("format")
+			if format == "" {
+				format = "stylish"
+			}
 
+			result := code.ParseWithFormat(filepath1, filepath2, format)
 			fmt.Println(result)
 
 			return nil
