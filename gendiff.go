@@ -94,8 +94,28 @@ func convertMapToTree(data map[string]interface{}) *TreeNode {
 	for key, value := range data {
 		switch v := value.(type) {
 		case map[string]interface{}:
-			childNode := convertMapToTree(v)
-			childNode.Key = key
+			childTree := convertMapToTree(v)
+			childNode := &TreeNode{
+				Key:      key,
+				Value:    nil,
+				Children: childTree.Children,
+			}
+			root.Children = append(root.Children, childNode)
+
+		case map[interface{}]interface{}:
+			// Convert map[interface{}]interface{} to map[string]interface{}
+			convertedMap := make(map[string]interface{})
+			for k, val := range v {
+				if strKey, ok := k.(string); ok {
+					convertedMap[strKey] = val
+				}
+			}
+			childTree := convertMapToTree(convertedMap)
+			childNode := &TreeNode{
+				Key:      key,
+				Value:    nil,
+				Children: childTree.Children,
+			}
 			root.Children = append(root.Children, childNode)
 
 		case []interface{}:
@@ -164,12 +184,12 @@ func genDiff(tree1, tree2 *TreeNode) []*DiffNode {
 			diffNode.OldValue = node1.Value
 
 		case node1 != nil && node2 != nil:
-			if areValuesEqual(node1, node2) {
-				diffNode.Status = "unchanged"
-				diffNode.OldValue = node1.Value
-			} else if hasChildren(node1) && hasChildren(node2) {
+			if hasChildren(node1) && hasChildren(node2) {
 				diffNode.Status = "nested"
 				diffNode.Children = genDiff(node1, node2)
+			} else if !hasChildren(node1) && !hasChildren(node2) && areValuesEqual(node1, node2) {
+				diffNode.Status = "unchanged"
+				diffNode.OldValue = node1.Value
 			} else {
 				diffNode.Status = "modified"
 				diffNode.OldValue = node1.Value
@@ -190,14 +210,14 @@ func renderDiff(diffNodes []*DiffNode) string {
 	for _, node := range diffNodes {
 		switch node.Status {
 		case "unchanged":
-			result.WriteString(fmt.Sprintf("    %s: %v\n", node.Key, node.OldValue))
+			result.WriteString(fmt.Sprintf("  %s: %v\n", node.Key, node.OldValue))
 		case "added":
-			result.WriteString(fmt.Sprintf("  + %s: %v\n", node.Key, node.NewValue))
+			result.WriteString(fmt.Sprintf("+ %s: %v\n", node.Key, node.NewValue))
 		case "removed":
-			result.WriteString(fmt.Sprintf("  - %s: %v\n", node.Key, node.OldValue))
+			result.WriteString(fmt.Sprintf("- %s: %v\n", node.Key, node.OldValue))
 		case "modified":
-			result.WriteString(fmt.Sprintf("  - %s: %v\n", node.Key, node.OldValue))
-			result.WriteString(fmt.Sprintf("  + %s: %v\n", node.Key, node.NewValue))
+			result.WriteString(fmt.Sprintf("- %s: %v\n", node.Key, node.OldValue))
+			result.WriteString(fmt.Sprintf("* %s: %v\n", node.Key, node.NewValue))
 		case "nested":
 			result.WriteString(fmt.Sprintf("    %s: {\n", node.Key))
 			nestedResult := renderDiff(node.Children)
