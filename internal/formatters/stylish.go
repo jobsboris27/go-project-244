@@ -1,12 +1,13 @@
 package formatters
 
 import (
+	models "code/internal/models"
 	"fmt"
 	"sort"
 	"strings"
 )
 
-func RenderStylish(diffNodes []*DiffNode, depth int) string {
+func RenderStylish(diffNodes []*models.DiffNode, depth int) string {
 	var result strings.Builder
 
 	if depth == 0 {

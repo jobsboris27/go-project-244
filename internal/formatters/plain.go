@@ -1,11 +1,12 @@
 package formatters
 
 import (
+	models "code/internal/models"
 	"fmt"
 	"strings"
 )
 
-func RenderPlain(diffNodes []*DiffNode, path string) string {
+func RenderPlain(diffNodes []*models.DiffNode, path string) string {
 	var result strings.Builder
 
 	for _, node := range diffNodes {

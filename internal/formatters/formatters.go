@@ -1,14 +1,10 @@
 package formatters
 
-type DiffNode struct {
-	Key      string
-	Status   string
-	OldValue interface{}
-	NewValue interface{}
-	Children []*DiffNode
-}
+import (
+	models "code/internal/models"
+)
 
-func RenderWithFormat(diffNodes []*DiffNode, format string) string {
+func RenderWithFormat(diffNodes []*models.DiffNode, format string) string {
 	switch format {
 	case "plain":
 		return RenderPlain(diffNodes, "")

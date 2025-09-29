@@ -1,25 +1,26 @@
 package formatters
 
 import (
+	models "code/internal/models"
 	"encoding/json"
 )
 
-func RenderJSON(diffNodes []*DiffNode) string {
+func RenderJSON(diffNodes []*models.DiffNode) string {
 	jsonData := convertToJSONFormat(diffNodes)
 	result, _ := json.MarshalIndent(jsonData, "", "  ")
 	return string(result)
 }
 
-func convertToJSONFormat(diffNodes []*DiffNode) []map[string]interface{} {
+func convertToJSONFormat(diffNodes []*models.DiffNode) []map[string]interface{} {
 	var result []map[string]interface{}
 
 	for _, node := range diffNodes {
 		switch node.Status {
 		case "added":
 			result = append(result, map[string]interface{}{
-				"key":    node.Key,
-				"type":   "added",
-				"value":  node.NewValue,
+				"key":   node.Key,
+				"type":  "added",
+				"value": node.NewValue,
 			})
 
 		case "removed":

@@ -2,6 +2,7 @@ package code
 
 import (
 	"code/internal/formatters"
+	models "code/internal/models"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -11,19 +12,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-type TreeNode struct {
-	Key      string
-	Value    interface{}
-	Children []*TreeNode
-}
-
-type DiffNode struct {
-	Key      string
-	Status   string
-	OldValue interface{}
-	NewValue interface{}
-	Children []*DiffNode
-}
 
 const (
 	YAML_EXT = ".yaml"
@@ -51,24 +39,8 @@ func ParseWithFormat(path1, path2, format string) string {
 	return renderWithFormat(diff, format)
 }
 
-func renderWithFormat(diffNodes []*DiffNode, format string) string {
-	formatterNodes := convertToFormatterNodes(diffNodes)
-	return formatters.RenderWithFormat(formatterNodes, format)
-}
-
-func convertToFormatterNodes(diffNodes []*DiffNode) []*formatters.DiffNode {
-	var result []*formatters.DiffNode
-	for _, node := range diffNodes {
-		formatterNode := &formatters.DiffNode{
-			Key:      node.Key,
-			Status:   node.Status,
-			OldValue: node.OldValue,
-			NewValue: node.NewValue,
-			Children: convertToFormatterNodes(node.Children),
-		}
-		result = append(result, formatterNode)
-	}
-	return result
+func renderWithFormat(diffNodes []*models.DiffNode, format string) string {
+	return formatters.RenderWithFormat(diffNodes, format)
 }
 
 func parseByExtension(path string) (map[string]interface{}, error) {
@@ -112,14 +84,14 @@ func parseYAML(path string) (map[string]interface{}, error) {
 	return result, nil
 }
 
-func convertMapToTree(data map[string]interface{}) *TreeNode {
-	root := &TreeNode{Key: "root", Children: []*TreeNode{}}
+func convertMapToTree(data map[string]interface{}) *models.TreeNode {
+	root := &models.TreeNode{Key: "root", Children: []*models.TreeNode{}}
 
 	for key, value := range data {
 		switch v := value.(type) {
 		case map[string]interface{}:
 			childTree := convertMapToTree(v)
-			childNode := &TreeNode{
+			childNode := &models.TreeNode{
 				Key:      key,
 				Value:    nil,
 				Children: childTree.Children,
@@ -134,7 +106,7 @@ func convertMapToTree(data map[string]interface{}) *TreeNode {
 				}
 			}
 			childTree := convertMapToTree(convertedMap)
-			childNode := &TreeNode{
+			childNode := &models.TreeNode{
 				Key:      key,
 				Value:    nil,
 				Children: childTree.Children,
@@ -142,14 +114,14 @@ func convertMapToTree(data map[string]interface{}) *TreeNode {
 			root.Children = append(root.Children, childNode)
 
 		case []interface{}:
-			arrayNode := &TreeNode{
+			arrayNode := &models.TreeNode{
 				Key:      key,
 				Value:    nil,
-				Children: []*TreeNode{},
+				Children: []*models.TreeNode{},
 			}
 
 			for i, item := range v {
-				itemNode := &TreeNode{
+				itemNode := &models.TreeNode{
 					Key:   fmt.Sprintf("[%d]", i),
 					Value: item,
 				}
@@ -163,7 +135,7 @@ func convertMapToTree(data map[string]interface{}) *TreeNode {
 						fmt.Sprintf("[%d]", i): v,
 					})
 				default:
-					itemNode = &TreeNode{
+					itemNode = &models.TreeNode{
 						Key:   fmt.Sprintf("[%d]", i),
 						Value: item,
 					}
@@ -174,7 +146,7 @@ func convertMapToTree(data map[string]interface{}) *TreeNode {
 			root.Children = append(root.Children, arrayNode)
 
 		default:
-			leafNode := &TreeNode{
+			leafNode := &models.TreeNode{
 				Key:   key,
 				Value: v,
 			}
@@ -185,8 +157,8 @@ func convertMapToTree(data map[string]interface{}) *TreeNode {
 	return root
 }
 
-func genDiff(tree1, tree2 *TreeNode) []*DiffNode {
-	var diff []*DiffNode
+func genDiff(tree1, tree2 *models.TreeNode) []*models.DiffNode {
+	var diff []*models.DiffNode
 
 	allKeys := collectAllKeys(tree1, tree2)
 	sort.Strings(allKeys)
@@ -195,7 +167,7 @@ func genDiff(tree1, tree2 *TreeNode) []*DiffNode {
 		node1 := findChildByKey(tree1, key)
 		node2 := findChildByKey(tree2, key)
 
-		diffNode := &DiffNode{Key: key}
+		diffNode := &models.DiffNode{Key: key}
 
 		switch {
 		case node1 == nil && node2 != nil:
@@ -242,7 +214,7 @@ func genDiff(tree1, tree2 *TreeNode) []*DiffNode {
 	return diff
 }
 
-func collectAllKeys(tree1, tree2 *TreeNode) []string {
+func collectAllKeys(tree1, tree2 *models.TreeNode) []string {
 	keys := make(map[string]bool)
 
 	if tree1 != nil {
@@ -263,7 +235,7 @@ func collectAllKeys(tree1, tree2 *TreeNode) []string {
 	return result
 }
 
-func findChildByKey(tree *TreeNode, key string) *TreeNode {
+func findChildByKey(tree *models.TreeNode, key string) *models.TreeNode {
 	if tree == nil {
 		return nil
 	}
@@ -275,18 +247,18 @@ func findChildByKey(tree *TreeNode, key string) *TreeNode {
 	return nil
 }
 
-func areValuesEqual(node1, node2 *TreeNode) bool {
+func areValuesEqual(node1, node2 *models.TreeNode) bool {
 	if node1 == nil || node2 == nil {
 		return false
 	}
 	return fmt.Sprintf("%v", node1.Value) == fmt.Sprintf("%v", node2.Value)
 }
 
-func hasChildren(node *TreeNode) bool {
+func hasChildren(node *models.TreeNode) bool {
 	return node != nil && len(node.Children) > 0
 }
 
-func reconstructObject(node *TreeNode) interface{} {
+func reconstructObject(node *models.TreeNode) interface{} {
 	if !hasChildren(node) {
 		return node.Value
 	}
