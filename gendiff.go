@@ -12,7 +12,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-
 const (
 	YAML_EXT = ".yaml"
 	JSON_EXT = ".json"
@@ -144,7 +143,6 @@ func convertMapToTree(data map[string]interface{}) *models.TreeNode {
 				arrayNode.Children = append(arrayNode.Children, itemNode)
 			}
 			root.Children = append(root.Children, arrayNode)
-
 		default:
 			leafNode := &models.TreeNode{
 				Key:   key,
