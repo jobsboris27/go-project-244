@@ -69,7 +69,6 @@ func TestParseYAMLFile(t *testing.T) {
 	assert.Equal(t, false, data["follow"])
 }
 
-
 func TestParseNestedJSON(t *testing.T) {
 	result := Parse("testdata/fixture/nested1.json", "testdata/fixture/nested2.json")
 
@@ -94,15 +93,15 @@ func TestParseNestedYAML(t *testing.T) {
 	assert.Contains(t, result, "+ setting3: null")
 }
 
-func TestParseWithFormat(t *testing.T) {
-	result1 := ParseWithFormat("testdata/fixture/nested1.json", "testdata/fixture/nested2.json", "stylish")
+func TestGenDiff(t *testing.T) {
+	result1 := GenDiff("testdata/fixture/nested1.json", "testdata/fixture/nested2.json", "stylish")
 	result2 := Parse("testdata/fixture/nested1.json", "testdata/fixture/nested2.json")
 
 	assert.Equal(t, result1, result2)
 }
 
 func TestPlainFormatter(t *testing.T) {
-	result := ParseWithFormat("testdata/fixture/nested1.json", "testdata/fixture/nested2.json", "plain")
+	result := GenDiff("testdata/fixture/nested1.json", "testdata/fixture/nested2.json", "plain")
 
 	assert.Contains(t, result, "Property 'common.follow' was added with value: false")
 	assert.Contains(t, result, "Property 'common.setting2' was removed")
@@ -118,7 +117,7 @@ func TestPlainFormatter(t *testing.T) {
 }
 
 func TestPlainFormatterSimple(t *testing.T) {
-	result := ParseWithFormat("testdata/fixture/file1.yaml", "testdata/fixture/file2.yaml", "plain")
+	result := GenDiff("testdata/fixture/file1.yaml", "testdata/fixture/file2.yaml", "plain")
 
 	assert.Contains(t, result, "Property 'follow' was removed")
 	assert.Contains(t, result, "Property 'proxy' was removed")
@@ -127,7 +126,7 @@ func TestPlainFormatterSimple(t *testing.T) {
 }
 
 func TestJSONFormatter(t *testing.T) {
-	result := ParseWithFormat("testdata/fixture/file1.yaml", "testdata/fixture/file2.yaml", "json")
+	result := GenDiff("testdata/fixture/file1.yaml", "testdata/fixture/file2.yaml", "json")
 
 	assert.Contains(t, result, `"key": "follow"`)
 	assert.Contains(t, result, `"type": "removed"`)
@@ -145,7 +144,7 @@ func TestJSONFormatter(t *testing.T) {
 }
 
 func TestJSONFormatterNested(t *testing.T) {
-	result := ParseWithFormat("testdata/fixture/nested1.json", "testdata/fixture/nested2.json", "json")
+	result := GenDiff("testdata/fixture/nested1.json", "testdata/fixture/nested2.json", "json")
 
 	assert.Contains(t, result, `"key": "common"`)
 	assert.Contains(t, result, `"type": "nested"`)
@@ -159,4 +158,3 @@ func TestJSONFormatterNested(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Greater(t, len(jsonData), 0)
 }
-
