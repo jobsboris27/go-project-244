@@ -10,7 +10,7 @@ import (
 )
 
 func TestParseFlatJSON(t *testing.T) {
-	result := Parse("testdata/fixture/file1.json", "testdata/fixture/file2.json")
+	result, _ := Parse("testdata/fixture/file1.json", "testdata/fixture/file2.json")
 	expected, err := os.ReadFile("testdata/fixture/expected_flat.txt")
 	assert.NoError(t, err)
 
@@ -42,7 +42,7 @@ func TestParseJSONNonExistentFile(t *testing.T) {
 }
 
 func TestParseFlatYAML(t *testing.T) {
-	result := Parse("testdata/fixture/file1.yaml", "testdata/fixture/file2.yaml")
+	result, _ := Parse("testdata/fixture/file1.yaml", "testdata/fixture/file2.yaml")
 
 	expected := `{
   - follow: false
@@ -70,7 +70,7 @@ func TestParseYAMLFile(t *testing.T) {
 }
 
 func TestParseNestedJSON(t *testing.T) {
-	result := Parse("testdata/fixture/nested1.json", "testdata/fixture/nested2.json")
+	result, _ := Parse("testdata/fixture/nested1.json", "testdata/fixture/nested2.json")
 
 	assert.Contains(t, result, "common: {")
 	assert.Contains(t, result, "+ follow: false")
@@ -84,7 +84,7 @@ func TestParseNestedJSON(t *testing.T) {
 }
 
 func TestParseNestedYAML(t *testing.T) {
-	result := Parse("testdata/fixture/nested1.yaml", "testdata/fixture/nested2.yaml")
+	result, _ := Parse("testdata/fixture/nested1.yaml", "testdata/fixture/nested2.yaml")
 
 	assert.Contains(t, result, "common: {")
 	assert.Contains(t, result, "+ follow: false")
@@ -94,14 +94,14 @@ func TestParseNestedYAML(t *testing.T) {
 }
 
 func TestGenDiff(t *testing.T) {
-	result1 := GenDiff("testdata/fixture/nested1.json", "testdata/fixture/nested2.json", "stylish")
-	result2 := Parse("testdata/fixture/nested1.json", "testdata/fixture/nested2.json")
+	result1, _ := GenDiff("testdata/fixture/nested1.json", "testdata/fixture/nested2.json", "stylish")
+	result2, _ := Parse("testdata/fixture/nested1.json", "testdata/fixture/nested2.json")
 
 	assert.Equal(t, result1, result2)
 }
 
 func TestPlainFormatter(t *testing.T) {
-	result := GenDiff("testdata/fixture/nested1.json", "testdata/fixture/nested2.json", "plain")
+	result, _ := GenDiff("testdata/fixture/nested1.json", "testdata/fixture/nested2.json", "plain")
 
 	assert.Contains(t, result, "Property 'common.follow' was added with value: false")
 	assert.Contains(t, result, "Property 'common.setting2' was removed")
@@ -117,7 +117,7 @@ func TestPlainFormatter(t *testing.T) {
 }
 
 func TestPlainFormatterSimple(t *testing.T) {
-	result := GenDiff("testdata/fixture/file1.yaml", "testdata/fixture/file2.yaml", "plain")
+	result, _ := GenDiff("testdata/fixture/file1.yaml", "testdata/fixture/file2.yaml", "plain")
 
 	assert.Contains(t, result, "Property 'follow' was removed")
 	assert.Contains(t, result, "Property 'proxy' was removed")
@@ -126,7 +126,7 @@ func TestPlainFormatterSimple(t *testing.T) {
 }
 
 func TestJSONFormatter(t *testing.T) {
-	result := GenDiff("testdata/fixture/file1.yaml", "testdata/fixture/file2.yaml", "json")
+	result, _ := GenDiff("testdata/fixture/file1.yaml", "testdata/fixture/file2.yaml", "json")
 
 	assert.Contains(t, result, `"key": "follow"`)
 	assert.Contains(t, result, `"type": "removed"`)
@@ -144,7 +144,7 @@ func TestJSONFormatter(t *testing.T) {
 }
 
 func TestJSONFormatterNested(t *testing.T) {
-	result := GenDiff("testdata/fixture/nested1.json", "testdata/fixture/nested2.json", "json")
+	result, _ := GenDiff("testdata/fixture/nested1.json", "testdata/fixture/nested2.json", "json")
 
 	assert.Contains(t, result, `"key": "common"`)
 	assert.Contains(t, result, `"type": "nested"`)

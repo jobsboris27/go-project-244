@@ -17,25 +17,25 @@ const (
 	JSON_EXT = ".json"
 )
 
-func Parse(path1, path2 string) string {
+func Parse(path1, path2 string) (string, error) {
 	return GenDiff(path1, path2, "stylish")
 }
 
-func GenDiff(path1, path2, format string) string {
+func GenDiff(path1, path2, format string) (string, error) {
 	data1, err := parseByExtension(path1)
 	if err != nil {
 		fmt.Println("Error parsing file 1:", err)
-		return ""
+		return "", err
 	}
 
 	data2, err := parseByExtension(path2)
 	if err != nil {
 		fmt.Println("Error parsing file 2:", err)
-		return ""
+		return "", err
 	}
 
 	diff := genDiff(convertMapToTree(data1), convertMapToTree(data2))
-	return renderWithFormat(diff, format)
+	return renderWithFormat(diff, format), nil
 }
 
 func renderWithFormat(diffNodes []*models.DiffNode, format string) string {
