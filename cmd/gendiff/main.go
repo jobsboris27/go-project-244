@@ -38,7 +38,7 @@ func main() {
 				format = "stylish"
 			}
 
-			result := code.ParseWithFormat(filepath1, filepath2, format)
+			result := code.GenDiff(filepath1, filepath2, format)
 			fmt.Println(result)
 
 			return nil

@@ -18,10 +18,10 @@ const (
 )
 
 func Parse(path1, path2 string) string {
-	return ParseWithFormat(path1, path2, "stylish")
+	return GenDiff(path1, path2, "stylish")
 }
 
-func ParseWithFormat(path1, path2, format string) string {
+func GenDiff(path1, path2, format string) string {
 	data1, err := parseByExtension(path1)
 	if err != nil {
 		fmt.Println("Error parsing file 1:", err)
