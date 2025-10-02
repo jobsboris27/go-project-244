@@ -38,7 +38,12 @@ func main() {
 				format = "stylish"
 			}
 
-			result := code.GenDiff(filepath1, filepath2, format)
+			result, err := code.GenDiff(filepath1, filepath2, format)
+
+			if err != nil {
+				return cli.Exit(fmt.Sprintf("Error: %v", err), 1)
+			}
+
 			fmt.Println(result)
 
 			return nil

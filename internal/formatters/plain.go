@@ -9,6 +9,10 @@ import (
 func RenderPlain(diffNodes []*models.DiffNode, path string) string {
 	var result strings.Builder
 
+	if len(diffNodes) == 0 {
+		return ""
+	}
+
 	for _, node := range diffNodes {
 		currentPath := buildPath(path, node.Key)
 
