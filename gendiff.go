@@ -23,9 +23,6 @@ func Parse(path1, path2 string) (string, error) {
 }
 
 func GenDiff(path1, path2, format string) (string, error) {
-	fmt.Printf("=== DEBUG GenDiff called ===\n")
-	fmt.Printf("Format: %s\n", format)
-
 	data1, err := parseByExtension(path1)
 	if err != nil {
 		fmt.Println("Error parsing file 1:", err)
@@ -64,14 +61,10 @@ func parseJSON(path string) (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	fmt.Printf("FILE %s CONTENT: %s\n", path, string(file))
-
 	var raw interface{}
 	if err := json.Unmarshal(file, &raw); err != nil {
 		return nil, err
 	}
-
-	fmt.Printf("PARSED DATA: %+v\n", raw)
 
 	switch v := raw.(type) {
 	case map[string]interface{}:

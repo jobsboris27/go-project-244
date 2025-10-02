@@ -137,10 +137,13 @@ func TestJSONFormatter(t *testing.T) {
 	assert.Contains(t, result, `"key": "verbose"`)
 	assert.Contains(t, result, `"type": "added"`)
 
-	var jsonData []map[string]interface{}
+	var jsonData map[string]interface{}
 	err := json.Unmarshal([]byte(result), &jsonData)
 	assert.NoError(t, err)
-	assert.Greater(t, len(jsonData), 0)
+
+	diffArray, exists := jsonData["diff"].([]interface{})
+	assert.True(t, exists)
+	assert.Greater(t, len(diffArray), 0)
 }
 
 func TestJSONFormatterNested(t *testing.T) {
@@ -153,10 +156,13 @@ func TestJSONFormatterNested(t *testing.T) {
 	assert.Contains(t, result, `"oldValue": true`)
 	assert.Contains(t, result, `"newValue": null`)
 
-	var jsonData []map[string]interface{}
+	var jsonData map[string]interface{}
 	err := json.Unmarshal([]byte(result), &jsonData)
 	assert.NoError(t, err)
-	assert.Greater(t, len(jsonData), 0)
+
+	diffArray, exists := jsonData["diff"].([]interface{})
+	assert.True(t, exists)
+	assert.Greater(t, len(diffArray), 0)
 }
 
 func TestParseJSONArray(t *testing.T) {
