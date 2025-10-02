@@ -15,7 +15,12 @@ func RenderJSON(diffNodes []*models.DiffNode) string {
 	}
 
 	jsonData := convertToJSONFormat(diffNodes)
-	result, _ := json.MarshalIndent(jsonData, "", "  ")
+
+	resultMap := map[string]interface{}{
+		"diff": jsonData,
+	}
+
+	result, _ := json.MarshalIndent(resultMap, "", "  ")
 	return string(result)
 }
 
