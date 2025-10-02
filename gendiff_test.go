@@ -158,3 +158,46 @@ func TestJSONFormatterNested(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Greater(t, len(jsonData), 0)
 }
+
+func TestParseJSONArray(t *testing.T) {
+	data, err := parseByExtension("testdata/fixture/file1arr.json")
+	assert.NoError(t, err)
+	assert.NotNil(t, data)
+
+	rootVal, ok := data["root"]
+	assert.True(t, ok, "expected 'root' key for top-level array")
+
+	arr, ok := rootVal.([]interface{})
+	assert.True(t, ok, "expected root to be []interface{}")
+	assert.Len(t, arr, 1)
+
+	obj, ok := arr[0].(map[string]interface{})
+	assert.True(t, ok)
+
+	assert.Equal(t, "hexlet.io", obj["host"])
+
+	assert.Equal(t, float64(50), obj["timeout"])
+	assert.Equal(t, "123.234.53.22", obj["proxy"])
+	assert.Equal(t, false, obj["follow"])
+}
+
+func TestParseJSONCompareArrays(t *testing.T) {
+	data1, err := parseByExtension("testdata/fixture/file1arr.json")
+	assert.NoError(t, err)
+	data2, err := parseByExtension("testdata/fixture/file2arr.json")
+	assert.NoError(t, err)
+
+	obj1, ok := data1["root"].([]interface{})[0].(map[string]interface{})
+	assert.True(t, ok)
+	obj2, ok := data2["root"].([]interface{})[0].(map[string]interface{})
+	assert.True(t, ok)
+
+	assert.Equal(t, float64(50), obj1["timeout"])
+	assert.Equal(t, float64(20), obj2["timeout"])
+	assert.Equal(t, true, obj2["verbose"])
+	assert.Equal(t, "hexlet.io", obj2["host"])
+
+	assert.Equal(t, "123.234.53.22", obj1["proxy"])
+	_, ok = obj2["proxy"]
+	assert.False(t, ok)
+}
