@@ -61,10 +61,14 @@ func parseJSON(path string) (map[string]interface{}, error) {
 		return nil, err
 	}
 
+	fmt.Printf("FILE %s CONTENT: %s\n", path, string(file))
+
 	var raw interface{}
 	if err := json.Unmarshal(file, &raw); err != nil {
 		return nil, err
 	}
+
+	fmt.Printf("PARSED DATA: %+v\n", raw)
 
 	switch v := raw.(type) {
 	case map[string]interface{}:
