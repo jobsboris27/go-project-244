@@ -18,10 +18,6 @@ const (
 	JSON_EXT       = ".json"
 )
 
-func Parse(path1, path2 string) (string, error) {
-	return GenDiff(path1, path2, "stylish")
-}
-
 func GenDiff(path1, path2, format string) (string, error) {
 	data1, err := parseByExtension(path1)
 	if err != nil {
@@ -36,11 +32,7 @@ func GenDiff(path1, path2, format string) (string, error) {
 	}
 
 	diff := genDiff(convertMapToTree(data1), convertMapToTree(data2))
-	return renderWithFormat(diff, format), nil
-}
-
-func renderWithFormat(diffNodes []*models.DiffNode, format string) string {
-	return formatters.RenderWithFormat(diffNodes, format)
+	return formatters.RenderWithFormat(diff, format), nil
 }
 
 func parseByExtension(path string) (map[string]interface{}, error) {
