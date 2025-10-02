@@ -13,8 +13,9 @@ import (
 )
 
 const (
-	YAML_EXT = ".yaml"
-	JSON_EXT = ".json"
+	YAML_EXT       = ".yaml"
+	YAML_EXT_SHORT = ".yml"
+	JSON_EXT       = ".json"
 )
 
 func Parse(path1, path2 string) (string, error) {
@@ -47,7 +48,7 @@ func parseByExtension(path string) (map[string]interface{}, error) {
 	switch ext {
 	case JSON_EXT:
 		return parseJSON(path)
-	case YAML_EXT:
+	case YAML_EXT, YAML_EXT_SHORT:
 		return parseYAML(path)
 	default:
 		return nil, fmt.Errorf("unsupported file extension: %s", ext)
@@ -59,28 +60,51 @@ func parseJSON(path string) (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	var result map[string]interface{}
-	errJson := json.Unmarshal(file, &result)
 
-	if errJson != nil {
-		return nil, errJson
+	var raw interface{}
+	if err := json.Unmarshal(file, &raw); err != nil {
+		return nil, err
 	}
-	return result, nil
+
+	switch v := raw.(type) {
+	case map[string]interface{}:
+		return v, nil
+	case []interface{}:
+		return map[string]interface{}{"root": v}, nil
+	default:
+		return map[string]interface{}{"root": v}, nil
+	}
 }
 
 func parseYAML(path string) (map[string]interface{}, error) {
-	var result map[string]interface{}
-
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file: %w", err)
 	}
 
-	if err := yaml.Unmarshal(data, &result); err != nil {
+	var raw interface{}
+	if err := yaml.Unmarshal(data, &raw); err != nil {
 		return nil, fmt.Errorf("failed to parse YAML: %w", err)
 	}
 
-	return result, nil
+	switch v := raw.(type) {
+	case map[interface{}]interface{}:
+		converted := make(map[string]interface{})
+		for k, val := range v {
+			if strKey, ok := k.(string); ok {
+				converted[strKey] = val
+			} else {
+				converted[fmt.Sprintf("%v", k)] = val
+			}
+		}
+		return converted, nil
+	case map[string]interface{}:
+		return v, nil
+	case []interface{}:
+		return map[string]interface{}{"root": v}, nil
+	default:
+		return map[string]interface{}{"root": v}, nil
+	}
 }
 
 func convertMapToTree(data map[string]interface{}) *models.TreeNode {
