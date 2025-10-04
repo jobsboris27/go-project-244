@@ -4,13 +4,19 @@ import (
 	models "code/internal/models"
 )
 
+const (
+	STYLISH = "stylish"
+	PLAIN   = "plain"
+	JSON    = "json"
+)
+
 func RenderWithFormat(diffNodes []*models.DiffNode, format string) string {
 	switch format {
-	case "plain":
+	case PLAIN:
 		return RenderPlain(diffNodes, "")
-	case "json":
+	case JSON:
 		return RenderJSON(diffNodes)
-	case "stylish":
+	case STYLISH:
 		return RenderStylish(diffNodes, 0)
 	default:
 		return RenderStylish(diffNodes, 0)

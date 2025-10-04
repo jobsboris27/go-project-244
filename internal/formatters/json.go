@@ -3,6 +3,7 @@ package formatters
 import (
 	models "code/internal/models"
 	"encoding/json"
+	"fmt"
 )
 
 func RenderJSON(diffNodes []*models.DiffNode) string {
@@ -12,7 +13,12 @@ func RenderJSON(diffNodes []*models.DiffNode) string {
 		"diff": jsonData,
 	}
 
-	result, _ := json.MarshalIndent(resultMap, "", "  ")
+	result, err := json.MarshalIndent(resultMap, "", "  ")
+
+	if err != nil {
+		fmt.Println("render json %w", err)
+		return ""
+	}
 	return string(result)
 }
 
@@ -21,39 +27,39 @@ func convertToJSONFormat(diffNodes []*models.DiffNode) []map[string]interface{} 
 
 	for _, node := range diffNodes {
 		switch node.Status {
-		case "added":
+		case ADDED:
 			result = append(result, map[string]interface{}{
 				"key":   node.Key,
-				"type":  "added",
+				"type":  ADDED,
 				"value": node.NewValue,
 			})
 
-		case "removed":
+		case REMOVED:
 			result = append(result, map[string]interface{}{
 				"key":   node.Key,
-				"type":  "removed",
+				"type":  REMOVED,
 				"value": node.OldValue,
 			})
 
-		case "unchanged":
+		case UNCHANGED:
 			result = append(result, map[string]interface{}{
 				"key":   node.Key,
-				"type":  "unchanged",
+				"type":  UNCHANGED,
 				"value": node.OldValue,
 			})
 
-		case "modified":
+		case MODIFIED:
 			result = append(result, map[string]interface{}{
 				"key":      node.Key,
-				"type":     "updated",
+				"type":     UPDATED,
 				"oldValue": node.OldValue,
 				"newValue": node.NewValue,
 			})
 
-		case "nested":
+		case NESTED:
 			result = append(result, map[string]interface{}{
 				"key":      node.Key,
-				"type":     "nested",
+				"type":     NESTED,
 				"children": convertToJSONFormat(node.Children),
 			})
 		}

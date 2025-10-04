@@ -7,6 +7,11 @@ import (
 	"strings"
 )
 
+const (
+	IndentSize = 4
+	SignOffset = 2
+)
+
 func RenderStylish(diffNodes []*models.DiffNode, depth int) string {
 	var result strings.Builder
 
@@ -16,25 +21,25 @@ func RenderStylish(diffNodes []*models.DiffNode, depth int) string {
 
 	for _, node := range diffNodes {
 		switch node.Status {
-		case "unchanged":
-			indent := strings.Repeat(" ", depth*4+4)
+		case UNCHANGED:
+			indent := strings.Repeat(" ", depth*IndentSize+IndentSize)
 			result.WriteString(fmt.Sprintf("%s%s: %s\n", indent, node.Key, formatValue(node.OldValue, depth+1)))
 
-		case "added":
-			indent := strings.Repeat(" ", depth*4+2)
+		case ADDED:
+			indent := strings.Repeat(" ", depth*IndentSize+SignOffset)
 			result.WriteString(fmt.Sprintf("%s+ %s: %s\n", indent, node.Key, formatValue(node.NewValue, depth+1)))
 
-		case "removed":
-			indent := strings.Repeat(" ", depth*4+2)
+		case REMOVED:
+			indent := strings.Repeat(" ", depth*IndentSize+SignOffset)
 			result.WriteString(fmt.Sprintf("%s- %s: %s\n", indent, node.Key, formatValue(node.OldValue, depth+1)))
 
-		case "modified":
-			indent := strings.Repeat(" ", depth*4+2)
+		case MODIFIED:
+			indent := strings.Repeat(" ", depth*IndentSize+SignOffset)
 			result.WriteString(fmt.Sprintf("%s- %s: %s\n", indent, node.Key, formatValue(node.OldValue, depth+1)))
 			result.WriteString(fmt.Sprintf("%s+ %s: %s\n", indent, node.Key, formatValue(node.NewValue, depth+1)))
 
-		case "nested":
-			indent := strings.Repeat(" ", depth*4+4)
+		case NESTED:
+			indent := strings.Repeat(" ", depth*IndentSize+IndentSize)
 			result.WriteString(fmt.Sprintf("%s%s: {\n", indent, node.Key))
 			result.WriteString(RenderStylish(node.Children, depth+1))
 			result.WriteString(fmt.Sprintf("%s}\n", indent))

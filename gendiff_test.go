@@ -1,6 +1,7 @@
 package code
 
 import (
+	parser "code/internal/parsers"
 	"encoding/json"
 	"os"
 	"strings"
@@ -21,7 +22,7 @@ func TestParseFlatJSON(t *testing.T) {
 }
 
 func TestParseByExtensionJSON(t *testing.T) {
-	data, err := parseByExtension("testdata/fixture/file1.json")
+	data, err := parser.ParseByExtension("testdata/fixture/file1.json")
 	assert.NoError(t, err)
 	assert.NotNil(t, data)
 
@@ -31,13 +32,13 @@ func TestParseByExtensionJSON(t *testing.T) {
 }
 
 func TestParseByExtensionUnsupported(t *testing.T) {
-	_, err := parseByExtension("test.txt")
+	_, err := parser.ParseByExtension("test.txt")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "unsupported file extension")
 }
 
 func TestParseJSONNonExistentFile(t *testing.T) {
-	_, err := parseJSON("nonexistent.json")
+	_, err := parser.ParseJSON("nonexistent.json")
 	assert.Error(t, err)
 }
 
@@ -60,7 +61,7 @@ func TestParseFlatYAML(t *testing.T) {
 }
 
 func TestParseYAMLFile(t *testing.T) {
-	data, err := parseYAML("testdata/fixture/file1.yaml")
+	data, err := parser.ParseYAML("testdata/fixture/file1.yaml")
 	assert.NoError(t, err)
 	assert.NotNil(t, data)
 
@@ -166,7 +167,7 @@ func TestJSONFormatterNested(t *testing.T) {
 }
 
 func TestParseJSONArray(t *testing.T) {
-	data, err := parseByExtension("testdata/fixture/file1arr.json")
+	data, err := parser.ParseByExtension("testdata/fixture/file1arr.json")
 	assert.NoError(t, err)
 	assert.NotNil(t, data)
 
@@ -188,9 +189,9 @@ func TestParseJSONArray(t *testing.T) {
 }
 
 func TestParseJSONCompareArrays(t *testing.T) {
-	data1, err := parseByExtension("testdata/fixture/file1arr.json")
+	data1, err := parser.ParseByExtension("testdata/fixture/file1arr.json")
 	assert.NoError(t, err)
-	data2, err := parseByExtension("testdata/fixture/file2arr.json")
+	data2, err := parser.ParseByExtension("testdata/fixture/file2arr.json")
 	assert.NoError(t, err)
 
 	obj1, ok := data1["root"].([]interface{})[0].(map[string]interface{})

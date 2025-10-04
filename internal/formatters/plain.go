@@ -17,18 +17,18 @@ func RenderPlain(diffNodes []*models.DiffNode, path string) string {
 		currentPath := buildPath(path, node.Key)
 
 		switch node.Status {
-		case "added":
+		case ADDED:
 			result.WriteString(fmt.Sprintf("Property '%s' was added with value: %s\n",
 				currentPath, formatPlainValue(node.NewValue)))
 
-		case "removed":
+		case REMOVED:
 			result.WriteString(fmt.Sprintf("Property '%s' was removed\n", currentPath))
 
-		case "modified":
+		case MODIFIED:
 			result.WriteString(fmt.Sprintf("Property '%s' was updated. From %s to %s\n",
 				currentPath, formatPlainValue(node.OldValue), formatPlainValue(node.NewValue)))
 
-		case "nested":
+		case NESTED:
 			nestedResult := RenderPlain(node.Children, currentPath)
 			if nestedResult != "" {
 				result.WriteString(nestedResult)
